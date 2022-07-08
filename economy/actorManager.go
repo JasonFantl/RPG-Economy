@@ -18,7 +18,7 @@ func Update() {
 
 func makeExchange(buyer, seller *Actor, good Good, amount, cost int) {
 	seller.assets[MONEY] += cost
-	seller.assets[good] += amount
+	seller.assets[good] -= amount
 	buyer.assets[MONEY] -= cost
 	buyer.assets[good] += amount
 }

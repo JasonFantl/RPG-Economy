@@ -25,7 +25,7 @@ func NewActor() *Actor {
 		name: fmt.Sprintf("%d", rand.Intn(1000)),
 		assets: map[Good]int{
 			MONEY: 100,
-			FOOD:  rand.Intn(20),
+			FOOD:  10,
 			WOOD:  rand.Intn(20),
 		},
 		personalValues: map[Good]float64{
