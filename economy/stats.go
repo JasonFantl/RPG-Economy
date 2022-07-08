@@ -22,7 +22,7 @@ func graphExpectedValues(good Good, screen *ebiten.Image) {
 	buckets := make(map[int]int)
 	// lets add the 0 index for the graph
 	buckets[0] = 0
-	for _, a := range actors {
+	for a := range actors {
 		bucketIndex := int(a.expectedValues[good] / float64(jump))
 		buckets[bucketIndex]++
 	}
@@ -42,7 +42,7 @@ func graphPersonalValues(good Good, screen *ebiten.Image) {
 	buckets := make(map[int]int)
 	// lets add the 0 index for the graph
 	buckets[0] = 0
-	for _, a := range actors {
+	for a := range actors {
 		bucketIndex := int(a.personalValues[good] / float64(jump))
 		buckets[bucketIndex]++
 	}
@@ -61,7 +61,7 @@ func graphSupplyDemand(good Good, screen *ebiten.Image) {
 
 	buckets := make(map[int]int)
 
-	for _, a := range actors {
+	for a := range actors {
 		bucketIndex := int(a.personalValues[good]) / jump
 		buckets[bucketIndex]++
 	}

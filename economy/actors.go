@@ -14,24 +14,19 @@ type Actor struct {
 	// 0.5 -> half of our expected value comes from the last signal.
 	// 1.0 -> last signal is the expected value.
 
-	transacted bool
+	// cooldown should later be replaced with limited assets
+	cooldown int // stops everyone from buying from 1 buyer or selling to 1 seller
 }
 
 func NewActor() *Actor {
 	actor := &Actor{
 		personalValues: map[Good]float64{
-			MONEY:  1.0, // ha
-			FOOD:   rand.Float64()*10 + 5,
-			WOOD:   rand.Float64() * 10,
 			ROCKET: rand.Float64()*10 + 5,
 		},
 		expectedValues: map[Good]float64{
-			MONEY:  1.0,
-			FOOD:   1.0,
-			WOOD:   1.0,
-			ROCKET: 0.0,
+			ROCKET: rand.Float64()*10 + 5,
 		},
-		priceSignalReactivity: 0.1,
+		priceSignalReactivity: 1.0,
 	}
 
 	return actor

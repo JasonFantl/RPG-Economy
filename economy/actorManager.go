@@ -1,112 +1,92 @@
 package economy
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 )
 
-var actors []*Actor
+var actors map[*Actor]bool
 
 func Initialize() {
-	actors = make([]*Actor, 20)
-	for i := 0; i < len(actors); i++ {
-		actors[i] = NewActor()
+	actors = make(map[*Actor]bool)
+	for i := 0; i < 20; i++ {
+		actors[NewActor()] = true
 	}
 }
 
 func Update() {
 
-	// for primer we use a round based system
-
-	// determine buyers and sellers
 	sellers := make(map[*Actor]bool)
 	buyers := make(map[*Actor]bool)
 
-	for _, actor := range actors {
-		actor.transacted = false // reset transactions for this round
+	for actor := range actors {
+		actor.cooldown--
 		if actor.expectedValues[ROCKET] < actor.personalValues[ROCKET] {
 			buyers[actor] = true
 		} else {
 			sellers[actor] = true
 		}
 	}
+	fmt.Printf("BUYERS: %d, SELLERS: %d\n", len(buyers), len(sellers))
 
-	// fmt.Printf("buyers: %d, sellers: %d\n", len(buyers), len(sellers))
+	for actor := range actors {
+		if rand.Float64() < 0.1 { // simulates time between activities
+			// select another actor
+			var buyer, seller *Actor = nil, nil
 
-	transactionMade := true
-	for transactionMade {
-		transactionMade = false
-
-		// pair up
-		remainingSellers := make([]*Actor, 0)
-		remainingBuyers := make([]*Actor, 0)
-		for seller := range sellers {
-			if !seller.transacted {
-				remainingSellers = append(remainingSellers, seller)
+			if isBuyer(actor, ROCKET) { // buying
+				buyer = actor
+				// look for a seller
+				for otherActor := range actors { // rely on random iteration
+					if isSeller(otherActor, ROCKET) {
+						seller = otherActor
+						break
+					}
+				}
+			} else if isSeller(actor, ROCKET) { // selling
+				seller = actor
+				// look for a buyer
+				for otherActor := range actors { // rely on random iteration
+					if isBuyer(otherActor, ROCKET) {
+						buyer = otherActor
+						break
+					}
+				}
 			}
-		}
-		for buyer := range buyers {
-			if !buyer.transacted {
-				remainingBuyers = append(remainingBuyers, buyer)
-			}
-		}
 
-		for i := 0; i < len(remainingBuyers) && i < len(remainingSellers); i++ {
-			// attempt to transact
-			seller := remainingSellers[i]
-			buyer := remainingBuyers[i]
-
-			offerPrice := seller.expectedValues[ROCKET] // we would use max, but we know sellers exp > per
-			// need some wiggle room 									V
-			willingBuyPrice := math.Min(buyer.expectedValues[ROCKET], buyer.personalValues[ROCKET])
-			if offerPrice <= willingBuyPrice {
-				// transaction made!
-				seller.transacted = true
-				buyer.transacted = true
-
-				transactionMade = true
-			}
-		}
-	}
-
-	// update expected values
-	for _, actor := range actors {
-		if sellers[actor] {
-			if actor.transacted {
-				// seller sold
-				actor.expectedValues[ROCKET]++
-			} else {
-				actor.expectedValues[ROCKET]--
-
-			}
-		} else {
-			if actor.transacted {
-				// buyer bought
-				actor.expectedValues[ROCKET]--
-			} else {
-				actor.expectedValues[ROCKET]++
-
+			if buyer != nil && seller != nil { // if a  pair has been found
+				fmt.Println("matched")
+				offerPrice := seller.expectedValues[ROCKET] // we would use max, but we know sellers exp > per
+				// need some wiggle room 									V
+				willingBuyPrice := math.Min(buyer.expectedValues[ROCKET], buyer.personalValues[ROCKET])
+				if offerPrice <= willingBuyPrice { // transaction made
+					buyer.cooldown, seller.cooldown = 10, 10
+					seller.expectedValues[ROCKET] += actor.priceSignalReactivity
+					buyer.expectedValues[ROCKET] -= actor.priceSignalReactivity
+				} else { // transaction failed
+					seller.expectedValues[ROCKET] -= actor.priceSignalReactivity
+					buyer.expectedValues[ROCKET] += actor.priceSignalReactivity
+				}
+			} else if buyer != nil { // buyer failed to find a seller
+				buyer.expectedValues[ROCKET] += actor.priceSignalReactivity
+			} else if seller != nil { // seller failed to find a buyer
+				seller.expectedValues[ROCKET] -= actor.priceSignalReactivity
 			}
 		}
 	}
 }
 
-func ChangePVals() {
-	for _, actor := range actors {
-		actor.personalValues[ROCKET] += rand.Float64() * 0.5
+func ChangePVals(d float64) {
+	for actor := range actors {
+		actor.personalValues[ROCKET] += d
 	}
 }
 
-func intMin(i, j int) int {
-	if i < j {
-		return i
-	}
-	return j
+func isBuyer(actor *Actor, good Good) bool {
+	return (actor.expectedValues[good] < actor.personalValues[good]) && actor.cooldown <= 0
 }
 
-func intMax(i, j int) int {
-	if i < j {
-		return j
-	}
-	return i
+func isSeller(actor *Actor, good Good) bool {
+	return actor.expectedValues[good] > actor.personalValues[good] && actor.cooldown <= 0
 }

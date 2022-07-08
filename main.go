@@ -23,7 +23,10 @@ func (g *Game) Update() error {
 
 	for _, p := range inpututil.AppendPressedKeys(make([]ebiten.Key, 1)) {
 		if p == ebiten.KeyU {
-			economy.ChangePVals()
+			economy.ChangePVals(0.5)
+		}
+		if p == ebiten.KeyD {
+			economy.ChangePVals(-0.5)
 		}
 	}
 
