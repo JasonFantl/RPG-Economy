@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jasonfantl/RPGEconomy/economy"
 	"github.com/jasonfantl/RPGEconomy/gui"
 )
@@ -15,7 +18,14 @@ type Game struct {
 func (g *Game) Update() error {
 
 	gui.Move()
+
 	economy.Update()
+
+	for _, p := range inpututil.AppendPressedKeys(make([]ebiten.Key, 1)) {
+		if p == ebiten.KeyU {
+			economy.ChangePVals()
+		}
+	}
 
 	return nil
 }
@@ -33,6 +43,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+	rand.Seed(time.Now().Unix())
 	wx, wy := gui.Dimensions()
 	ebiten.SetWindowSize(wx, wy)
 	ebiten.SetWindowTitle("Economy Sim")
