@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	screenWidth  = 800
-	screenHeight = 500
+	screenWidth  = 1000
+	screenHeight = 800
 )
 
 var (

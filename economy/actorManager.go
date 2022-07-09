@@ -19,30 +19,21 @@ func Update() {
 	buyers := make(map[*Actor]bool)
 
 	for actor := range actors {
-		actor.cooldown--
-		if actor.expectedValues[ROCKET] < actor.personalValues[ROCKET] {
+		if actor.isBuyer(ROCKET) && actor.canBuy(1) {
 			buyers[actor] = true
-		} else {
+		} else if actor.isSeller(ROCKET) && actor.canSell(ROCKET) {
 			sellers[actor] = true
 		}
 	}
-	fmt.Printf("BUYERS: %d, SELLERS: %d\n", len(buyers), len(sellers))
+	fmt.Printf("BUYERS: %d, SELLERS: %d, NON: %d\n", len(buyers), len(sellers), len(actors)-(len(buyers)+len(sellers)))
 
 	for actor := range actors {
 		actor.Update()
 	}
 }
 
-func ChangePVals(d float64) {
+func DoStuff(d float64) {
 	for actor := range actors {
-		actor.personalValues[ROCKET] += d
+		actor.assets[ROCKET] += int(d)
 	}
-}
-
-func isBuyer(actor *Actor, good Good) bool {
-	return (actor.expectedValues[good] < actor.personalValues[good]) && actor.cooldown <= 0
-}
-
-func isSeller(actor *Actor, good Good) bool {
-	return actor.expectedValues[good] > actor.personalValues[good] && actor.cooldown <= 0
 }

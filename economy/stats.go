@@ -10,50 +10,86 @@ import (
 )
 
 func DrawGraphs(screen *ebiten.Image) {
-	graphExpectedValues(ROCKET, screen)
 	graphPersonalValues(ROCKET, screen)
 	graphSupplyDemand(ROCKET, screen)
-
+	graphDesiredValues(ROCKET, screen)
+	graphWealth(screen)
 }
 
-func graphExpectedValues(good Good, screen *ebiten.Image) {
-	jump := 1
+func graphWealth(screen *ebiten.Image) {
+	jump := 20
 
 	buckets := make(map[int]int)
+
 	// lets add the 0 index for the graph
 	buckets[0] = 0
 	for a := range actors {
-		bucketIndex := int(a.expectedValues[good] / float64(jump))
+		bucketIndex := a.assets[MONEY] / jump
 		buckets[bucketIndex]++
 	}
 
 	points := make([][]float64, 0)
 
 	for k, v := range buckets {
-		points = append(points, []float64{float64(k * jump), float64(v)})
+		points = append(points, []float64{float64(k * jump), float64(v), 0})
 	}
 
-	drawGraph(points, jump, 5, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("%s Expected Values", good), screen)
+	drawGraph(points, jump, 4, 600.0, 200.0, 15.0, 15.0, "Wealth", screen)
 }
 
 func graphPersonalValues(good Good, screen *ebiten.Image) {
 	jump := 1
 
 	buckets := make(map[int]int)
+	buckets2 := make(map[int]int)
+
 	// lets add the 0 index for the graph
 	buckets[0] = 0
 	for a := range actors {
 		bucketIndex := int(a.personalValues[good] / float64(jump))
 		buckets[bucketIndex]++
+		bucketIndex2 := int(a.expectedValues[good] / float64(jump))
+		buckets2[bucketIndex2]++
 	}
 
 	points := make([][]float64, 0)
 
 	for k, v := range buckets {
-		points = append(points, []float64{float64(k * jump), float64(v)})
+		points = append(points, []float64{float64(k * jump), float64(v), 0})
+	}
+	for k, v := range buckets2 {
+		points = append(points, []float64{float64(k * jump), float64(v), 1})
 	}
 
-	drawGraph(points, jump, 2, 400.0, 200.0, 15.0, 15.0, fmt.Sprintf("%s Personal Values", good), screen)
+	drawGraph(points, jump, 4, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("Personal and Expected Value of %s", good), screen)
+}
+
+func graphDesiredValues(good Good, screen *ebiten.Image) {
+	jump := 1
+
+	buckets := make(map[int]int)
+	bucket2s := make(map[int]int)
+	// lets add the 0 index for the graph
+	buckets[0] = 0
+	bucket2s[0] = 0
+
+	for a := range actors {
+		bucketIndex := int(float64(a.desiredAssets[good]) / float64(jump))
+		buckets[bucketIndex]++
+		bucket2Index := int(float64(a.assets[good]) / float64(jump))
+		bucket2s[bucket2Index]++
+	}
+
+	points := make([][]float64, 0)
+
+	for k, v := range buckets {
+		points = append(points, []float64{float64(k * jump), float64(v), 0})
+	}
+	for k, v := range bucket2s {
+		points = append(points, []float64{float64(k * jump), float64(v), 1})
+	}
+
+	drawGraph(points, jump, 4, 100.0, 600.0, 15.0, 15.0, fmt.Sprintf("Desired and Actual %s", good), screen)
 }
 
 func graphSupplyDemand(good Good, screen *ebiten.Image) {
@@ -101,7 +137,7 @@ func graphSupplyDemand(good Good, screen *ebiten.Image) {
 
 	SD := append(summedPointsR, summedPointsL...)
 	SD = append(SD, []float64{0, 0, 0})
-	drawGraph(SD, jump, 10, 100.0, 400.0, 15.0, 15.0, fmt.Sprintf("%s Supply v Demand", good), screen)
+	drawGraph(SD, jump, 10, 100.0, 400.0, 15.0, 15.0, fmt.Sprintf("Supply v Demand of %s", good), screen)
 }
 
 // values should be in the format {{1, 4}, {5, 8}}. Note if jumpX is not 1, then the x's must be multiples of jumpX

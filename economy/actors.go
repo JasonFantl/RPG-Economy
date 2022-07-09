@@ -15,8 +15,8 @@ type Actor struct {
 	// 0.5 -> half of our expected value comes from the last signal.
 	// 1.0 -> last signal is the expected value.
 
-	// cooldown should later be replaced with limited assets
-	cooldown int // stops everyone from buying from 1 buyer or selling to 1 seller
+	assets        map[Good]int
+	desiredAssets map[Good]int
 }
 
 func NewActor() *Actor {
@@ -28,52 +28,105 @@ func NewActor() *Actor {
 			ROCKET: rand.Float64()*10 + 5,
 		},
 		priceSignalReactivity: 1.0,
+		assets: map[Good]int{
+			MONEY:  100,
+			ROCKET: 10,
+		},
+		desiredAssets: map[Good]int{
+			ROCKET: rand.Intn(10) + 20,
+		},
 	}
 
 	return actor
 }
 
 func (actor *Actor) Update() {
-	if rand.Float64() < 0.1 { // simulates time between activities
-		// select another actor
-		var buyer, seller *Actor = nil, nil
 
-		if isBuyer(actor, ROCKET) { // buying
-			buyer = actor
-			// look for a seller
-			for otherActor := range actors { // rely on random iteration
-				if isSeller(otherActor, ROCKET) {
-					seller = otherActor
-					break
-				}
+	// desired equation
+	actor.personalValues[ROCKET] = float64(actor.desiredAssets[ROCKET] - actor.assets[ROCKET])
+
+	if rand.Float64() > 0.1 { // simulates time between activities
+		return
+	}
+	// select another actor
+	var buyer, seller *Actor = nil, nil
+
+	if actor.isBuyer(ROCKET) && actor.canBuy(actor.willingBuyPrice(ROCKET)) { // buying
+		buyer = actor
+		// look for a seller
+		for otherActor := range actors { // rely on random iteration
+			if otherActor.isSeller(ROCKET) && otherActor.canSell(ROCKET) {
+				seller = otherActor
+				break
 			}
-		} else if isSeller(actor, ROCKET) { // selling
-			seller = actor
-			// look for a buyer
-			for otherActor := range actors { // rely on random iteration
-				if isBuyer(otherActor, ROCKET) {
+		}
+	} else if actor.isSeller(ROCKET) && actor.canSell(ROCKET) { // selling
+		seller = actor
+		// look for a buyer
+		for otherActor := range actors { // rely on random iteration
+			if otherActor.isBuyer(ROCKET) {
+				if otherActor.canBuy(seller.willingSellPrice(ROCKET)) {
 					buyer = otherActor
 					break
 				}
 			}
 		}
-
-		if buyer != nil && seller != nil { // if a  pair has been found
-			offerPrice := seller.expectedValues[ROCKET] // we would use max, but we know sellers exp > per
-			// need some wiggle room 									V
-			willingBuyPrice := math.Min(buyer.expectedValues[ROCKET], buyer.personalValues[ROCKET])
-			if offerPrice <= willingBuyPrice { // transaction made
-				buyer.cooldown, seller.cooldown = 50, 50 // this can alter S and D (not seen in graphs) by altering how many sellers and buyers there are
-				seller.expectedValues[ROCKET] += actor.priceSignalReactivity
-				buyer.expectedValues[ROCKET] -= actor.priceSignalReactivity
-			} else { // transaction failed
-				seller.expectedValues[ROCKET] -= actor.priceSignalReactivity
-				buyer.expectedValues[ROCKET] += actor.priceSignalReactivity
-			}
-		} else if buyer != nil { // buyer failed to find a seller
-			buyer.expectedValues[ROCKET] += actor.priceSignalReactivity
-		} else if seller != nil { // seller failed to find a buyer
-			seller.expectedValues[ROCKET] -= actor.priceSignalReactivity
-		}
 	}
+
+	if buyer != nil && seller != nil { // if a  pair has been found
+		offerPrice := seller.willingSellPrice(ROCKET)
+		willingBuyPrice := buyer.willingBuyPrice(ROCKET)
+
+		if offerPrice <= willingBuyPrice { // transaction made
+			seller.sellGood(ROCKET, offerPrice)
+			buyer.buyGood(ROCKET, offerPrice)
+		} else { // transaction failed
+			seller.expectedValues[ROCKET] -= actor.priceSignalReactivity
+			buyer.expectedValues[ROCKET] += actor.priceSignalReactivity
+		}
+	} else if buyer != nil { // buyer failed to find a seller
+		buyer.expectedValues[ROCKET] += actor.priceSignalReactivity
+	} else if seller != nil { // seller failed to find a buyer
+		seller.expectedValues[ROCKET] -= actor.priceSignalReactivity
+	}
+}
+
+func (actor *Actor) sellGood(good Good, cost int) {
+	actor.assets[good]--
+	actor.assets[MONEY] += cost
+	actor.expectedValues[good] += actor.priceSignalReactivity
+	// actor.personalValues[good] = float64(actor.desiredAssets[good] - actor.assets[good])
+}
+
+func (actor *Actor) buyGood(good Good, cost int) {
+	actor.assets[good]++
+	actor.assets[MONEY] -= cost
+	actor.expectedValues[good] -= actor.priceSignalReactivity
+	// actor.personalValues[good] = float64(actor.desiredAssets[good] - actor.assets[good])
+}
+
+func (actor *Actor) willingBuyPrice(good Good) int {
+	return int(math.Floor(math.Min(actor.expectedValues[good], actor.personalValues[good])))
+}
+
+func (actor *Actor) willingSellPrice(good Good) int {
+	return int(math.Ceil(math.Max(actor.expectedValues[good], actor.personalValues[good])))
+}
+
+func (actor *Actor) isBuyer(good Good) bool {
+	return actor.expectedValues[good] < actor.personalValues[good]
+}
+
+func (actor *Actor) isSeller(good Good) bool {
+	return actor.expectedValues[good] > actor.personalValues[good]
+}
+
+func (actor *Actor) canBuy(cost int) bool {
+	// return true
+	return actor.assets[MONEY] >= cost
+}
+
+func (actor *Actor) canSell(good Good) bool {
+	// return true
+	return actor.assets[good] > 0
 }
