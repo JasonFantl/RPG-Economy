@@ -33,7 +33,7 @@ func graphExpectedValues(good Good, screen *ebiten.Image) {
 		points = append(points, []float64{float64(k * jump), float64(v)})
 	}
 
-	drawGraph(points, jump, 2, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("%s Expected Values", good), screen)
+	drawGraph(points, jump, 5, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("%s Expected Values", good), screen)
 }
 
 func graphPersonalValues(good Good, screen *ebiten.Image) {
@@ -53,7 +53,7 @@ func graphPersonalValues(good Good, screen *ebiten.Image) {
 		points = append(points, []float64{float64(k * jump), float64(v)})
 	}
 
-	drawGraph(points, jump, 1, 400.0, 200.0, 15.0, 15.0, fmt.Sprintf("%s Personal Values", good), screen)
+	drawGraph(points, jump, 2, 400.0, 200.0, 15.0, 15.0, fmt.Sprintf("%s Personal Values", good), screen)
 }
 
 func graphSupplyDemand(good Good, screen *ebiten.Image) {
@@ -101,7 +101,7 @@ func graphSupplyDemand(good Good, screen *ebiten.Image) {
 
 	SD := append(summedPointsR, summedPointsL...)
 	SD = append(SD, []float64{0, 0, 0})
-	drawGraph(SD, jump, 3, 100.0, 400.0, 15.0, 15.0, fmt.Sprintf("%s Supply v Demand", good), screen)
+	drawGraph(SD, jump, 10, 100.0, 400.0, 15.0, 15.0, fmt.Sprintf("%s Supply v Demand", good), screen)
 }
 
 // values should be in the format {{1, 4}, {5, 8}}. Note if jumpX is not 1, then the x's must be multiples of jumpX

@@ -29,7 +29,7 @@ func Display(screen *ebiten.Image) {
 
 	for i := 0; i < len(layout); i++ {
 		for j := 0; j < len(layout[0]); j++ {
-			DisplaySprite(j, i, layout[i][j], screen)
+			DisplaySprite(i, j, layout[i][j], screen)
 		}
 	}
 }
