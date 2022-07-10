@@ -14,6 +14,7 @@ func DrawGraphs(screen *ebiten.Image) {
 	graphSupplyDemand(ROCKET, screen)
 	graphDesiredValues(ROCKET, screen)
 	graphWealth(screen)
+	drawPlot(400, 400, 3.0, 1.0, "corr", screen)
 }
 
 func graphWealth(screen *ebiten.Image) {
@@ -40,25 +41,25 @@ func graphWealth(screen *ebiten.Image) {
 func graphPersonalValues(good Good, screen *ebiten.Image) {
 	jump := 1
 
-	buckets := make(map[int]int)
-	buckets2 := make(map[int]int)
+	buckets := []map[int]int{make(map[int]int), make(map[int]int), make(map[int]int)}
 
 	// lets add the 0 index for the graph
-	buckets[0] = 0
+	buckets[0][0] = 0
 	for a := range actors {
-		bucketIndex := int(a.personalValues[good] / float64(jump))
-		buckets[bucketIndex]++
-		bucketIndex2 := int(a.expectedValues[good] / float64(jump))
-		buckets2[bucketIndex2]++
+		bucketIndex := int(a.basePersonalValues[good] / float64(jump))
+		buckets[0][bucketIndex]++
+		bucketIndex = int(a.adjustedPersonalValues[good] / float64(jump))
+		buckets[1][bucketIndex]++
+		bucketIndex = int(a.expectedValues[good] / float64(jump))
+		buckets[2][bucketIndex]++
 	}
 
 	points := make([][]float64, 0)
 
-	for k, v := range buckets {
-		points = append(points, []float64{float64(k * jump), float64(v), 0})
-	}
-	for k, v := range buckets2 {
-		points = append(points, []float64{float64(k * jump), float64(v), 1})
+	for i, bucket := range buckets {
+		for k, v := range bucket {
+			points = append(points, []float64{float64(k * jump), float64(v), float64(i)})
+		}
 	}
 
 	drawGraph(points, jump, 4, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("Personal and Expected Value of %s", good), screen)
@@ -98,7 +99,7 @@ func graphSupplyDemand(good Good, screen *ebiten.Image) {
 	buckets := make(map[int]int)
 
 	for a := range actors {
-		bucketIndex := int(a.personalValues[good]) / jump
+		bucketIndex := int(a.adjustedPersonalValues[good]) / jump
 		buckets[bucketIndex]++
 	}
 
@@ -183,11 +184,52 @@ func drawGraph(points [][]float64, jumpXAxis, jumpYAxis int, drawXOff, drawYOff,
 		w := drawXZoom * float64(jumpXAxis)
 		h := -drawYZoom * (points[i][1] - minY)
 
-		c := color.RGBA{10, 10, 200, 100}
-		if len(points[i]) > 2 && points[i][2] == 1 {
-			c = color.RGBA{200, 10, 10, 100}
+		c := color.RGBA{0, 0, 200, 100}
+		if len(points[i]) > 2 {
+			n := int(points[i][2]) + 1
+			c = color.RGBA{uint8(200 * (n % 2)), uint8(200 * ((n / 2) % 2)), uint8(200 * ((n / 4) % 2)), 100}
 		}
 
 		ebitenutil.DrawRect(screen, x, y, w, h, c)
+	}
+
+}
+
+func drawPlot(drawXOff, drawYOff, drawXZoom, drawYZoom float64, title string, screen *ebiten.Image) {
+	minX, maxX := 100, 0
+	minY, maxY := 100, 0
+
+	for actor := range actors {
+		x := actor.assets[ROCKET]
+		y := actor.assets[MONEY]
+
+		ebitenutil.DrawRect(screen, drawXOff+float64(x)*drawXZoom, drawYOff+float64(-y)*drawYZoom, 3, 3, color.White)
+
+		if x < minX {
+			minX = x
+		}
+		if x > maxX {
+			maxX = x
+		}
+		if y < minY {
+			minY = y
+		}
+		if y > maxY {
+			maxY = y
+		}
+	}
+
+	// title
+	ebitenutil.DebugPrintAt(screen, title, int(drawXOff), int(drawYOff+drawYZoom))
+	jump := 10
+	// X axis
+	ebitenutil.DrawLine(screen, drawXOff, drawYOff, drawXOff+drawXZoom*float64(maxX-minX+2), drawYOff, color.White)
+	for i := int(minX); i <= int(maxX+1); i += jump {
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%d", i), int(drawXOff+drawXZoom*(float64(i-int(minX)))), int(drawYOff))
+	}
+	// Y axis
+	ebitenutil.DrawLine(screen, drawXOff, drawYOff, drawXOff, drawYOff-drawYZoom*float64(maxY-minY+1), color.White)
+	for i := int(minY); i <= int(maxY+1); i += jump {
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%d", i), int(drawXOff-drawXZoom), int(drawYOff-drawYZoom*float64(i-int(minY))-drawYZoom))
 	}
 }

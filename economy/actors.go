@@ -7,7 +7,8 @@ import (
 
 // implement physical attributes later
 type Actor struct {
-	personalValues map[Good]float64
+	basePersonalValues     map[Good]float64 // if they had no goods, how much would they be willing to pay for this good?
+	adjustedPersonalValues map[Good]float64 // changes based on if they have a good
 
 	expectedValues        map[Good]float64
 	priceSignalReactivity float64 // [0.0, 1.0] how quickly we believe new price signals to represent the average market value.
@@ -20,10 +21,12 @@ type Actor struct {
 }
 
 func NewActor() *Actor {
+	d := rand.Intn(100) + 1
 	actor := &Actor{
-		personalValues: map[Good]float64{
-			ROCKET: rand.Float64()*10 + 5,
+		basePersonalValues: map[Good]float64{
+			ROCKET: float64(d) / 2,
 		},
+		adjustedPersonalValues: make(map[Good]float64),
 		expectedValues: map[Good]float64{
 			ROCKET: rand.Float64()*10 + 5,
 		},
@@ -33,7 +36,7 @@ func NewActor() *Actor {
 			ROCKET: 10,
 		},
 		desiredAssets: map[Good]int{
-			ROCKET: rand.Intn(10) + 20,
+			ROCKET: d,
 		},
 	}
 
@@ -43,7 +46,8 @@ func NewActor() *Actor {
 func (actor *Actor) Update() {
 
 	// desired equation
-	actor.personalValues[ROCKET] = float64(actor.desiredAssets[ROCKET] - actor.assets[ROCKET])
+	intercept := actor.desiredAssets[ROCKET]
+	actor.adjustedPersonalValues[ROCKET] = actor.basePersonalValues[ROCKET] * float64(intercept-actor.assets[ROCKET]) / float64(intercept)
 
 	if rand.Float64() > 0.1 { // simulates time between activities
 		return
@@ -106,19 +110,19 @@ func (actor *Actor) buyGood(good Good, cost int) {
 }
 
 func (actor *Actor) willingBuyPrice(good Good) int {
-	return int(math.Floor(math.Min(actor.expectedValues[good], actor.personalValues[good])))
+	return int(math.Floor(math.Min(actor.expectedValues[good], actor.adjustedPersonalValues[good])))
 }
 
 func (actor *Actor) willingSellPrice(good Good) int {
-	return int(math.Ceil(math.Max(actor.expectedValues[good], actor.personalValues[good])))
+	return int(math.Ceil(math.Max(actor.expectedValues[good], actor.adjustedPersonalValues[good])))
 }
 
 func (actor *Actor) isBuyer(good Good) bool {
-	return actor.expectedValues[good] < actor.personalValues[good]
+	return actor.expectedValues[good] < actor.adjustedPersonalValues[good]
 }
 
 func (actor *Actor) isSeller(good Good) bool {
-	return actor.expectedValues[good] > actor.personalValues[good]
+	return actor.expectedValues[good] > actor.adjustedPersonalValues[good]
 }
 
 func (actor *Actor) canBuy(cost int) bool {
