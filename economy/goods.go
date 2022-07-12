@@ -8,3 +8,5 @@ const (
 	WOOD   = "Wood"
 	ROCKET = "Rocket"
 )
+
+var goods = []Good{MONEY, FOOD, WOOD, ROCKET}

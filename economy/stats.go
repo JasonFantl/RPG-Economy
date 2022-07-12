@@ -14,7 +14,7 @@ func DrawGraphs(screen *ebiten.Image) {
 	graphSupplyDemand(ROCKET, screen)
 	graphDesiredValues(ROCKET, screen)
 	graphWealth(screen)
-	drawPlot(400, 400, 3.0, 1.0, "corr", screen)
+	drawPlot(2, 20, 400, 400, 15.0, 15.0, "corr", screen)
 }
 
 func graphWealth(screen *ebiten.Image) {
@@ -60,7 +60,7 @@ func graphPersonalValues(good Good, screen *ebiten.Image) {
 		}
 	}
 
-	drawGraph(points, jump, 6, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("%s:\n  Adjusted\n  Expected", good), screen)
+	drawGraph(points, jump, 6, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("Adjusted and Expected for %s", good), screen)
 }
 
 func graphDesiredValues(good Good, screen *ebiten.Image) {
@@ -193,16 +193,17 @@ func drawGraph(points [][]float64, jumpXAxis, jumpYAxis int, drawXOff, drawYOff,
 
 }
 
-func drawPlot(drawXOff, drawYOff, drawXZoom, drawYZoom float64, title string, screen *ebiten.Image) {
-	minX, maxX := 100, 0
-	minY, maxY := 100, 0
+func drawPlot(jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom float64, title string, screen *ebiten.Image) {
+	minX, maxX := 0, 0
+	minY, maxY := 0, 0
+
+	ODXZ, ODYZ := drawXZoom, drawYZoom
+	drawXZoom /= float64(jumpXAxis)
+	drawYZoom /= float64(jumpYAxis)
 
 	for actor := range actors {
 		x := actor.assets[ROCKET]
 		y := actor.assets[MONEY]
-
-		ebitenutil.DrawRect(screen, drawXOff+float64(x)*drawXZoom, drawYOff+float64(-y)*drawYZoom, 3, 3, color.White)
-
 		if x < minX {
 			minX = x
 		}
@@ -217,17 +218,24 @@ func drawPlot(drawXOff, drawYOff, drawXZoom, drawYZoom float64, title string, sc
 		}
 	}
 
+	for actor := range actors {
+		x := actor.assets[ROCKET]
+		y := actor.assets[MONEY]
+
+		ebitenutil.DrawRect(screen, drawXOff+float64(x-minX)*drawXZoom, drawYOff+float64(-y+minY)*drawYZoom, 3, 3, color.White)
+	}
+
 	// title
-	ebitenutil.DebugPrintAt(screen, title, int(drawXOff), int(drawYOff+drawYZoom))
-	jump := 10
+	ebitenutil.DebugPrintAt(screen, title, int(drawXOff), int(drawYOff+ODYZ))
+
 	// X axis
 	ebitenutil.DrawLine(screen, drawXOff, drawYOff, drawXOff+drawXZoom*float64(maxX-minX+2), drawYOff, color.White)
-	for i := int(minX); i <= int(maxX+1); i += jump {
+	for i := int(minX); i <= int(maxX+1); i += int(jumpXAxis) {
 		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%d", i), int(drawXOff+drawXZoom*(float64(i-int(minX)))), int(drawYOff))
 	}
 	// Y axis
 	ebitenutil.DrawLine(screen, drawXOff, drawYOff, drawXOff, drawYOff-drawYZoom*float64(maxY-minY+1), color.White)
-	for i := int(minY); i <= int(maxY+1); i += jump {
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%d", i), int(drawXOff-drawXZoom), int(drawYOff-drawYZoom*float64(i-int(minY))-drawYZoom))
+	for i := int(minY); i <= int(maxY+1); i += int(jumpYAxis) {
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%d", i), int(drawXOff-ODXZ), int(drawYOff-drawYZoom*float64(i-int(minY))-ODYZ))
 	}
 }
