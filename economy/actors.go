@@ -21,22 +21,25 @@ type Actor struct {
 }
 
 func NewActor() *Actor {
-	d := rand.Intn(100) + 1
 	actor := &Actor{
 		basePersonalValues: map[Good]float64{
-			ROCKET: float64(d) / 2,
+			FOOD:   rand.Float64()*10 + 10,
+			ROCKET: rand.Float64() * 5,
 		},
 		adjustedPersonalValues: make(map[Good]float64),
 		expectedValues: map[Good]float64{
-			ROCKET: rand.Float64()*10 + 5,
+			FOOD:   0,
+			ROCKET: rand.Float64() * 10,
 		},
 		priceSignalReactivity: 1.0,
 		assets: map[Good]int{
 			MONEY:  100,
-			ROCKET: 10,
+			FOOD:   10,
+			ROCKET: 5,
 		},
 		desiredAssets: map[Good]int{
-			ROCKET: d,
+			FOOD:   3,
+			ROCKET: rand.Intn(50),
 		},
 	}
 
@@ -44,14 +47,14 @@ func NewActor() *Actor {
 }
 
 func (actor *Actor) Update() {
-
-	// desired equation
-	intercept := actor.desiredAssets[ROCKET]
-	actor.adjustedPersonalValues[ROCKET] = actor.basePersonalValues[ROCKET] * float64(intercept-actor.assets[ROCKET]) / float64(intercept)
-
 	if rand.Float64() > 0.1 { // simulates time between activities
 		return
 	}
+
+	// desired equation
+	actor.calcAdjustedValue(FOOD)
+	actor.calcAdjustedValue(ROCKET)
+
 	// select another actor
 	var buyer, seller *Actor = nil, nil
 
@@ -93,6 +96,20 @@ func (actor *Actor) Update() {
 	} else if seller != nil { // seller failed to find a buyer
 		seller.expectedValues[ROCKET] -= actor.priceSignalReactivity
 	}
+}
+
+func (actor *Actor) calcAdjustedValue(good Good) {
+	x := float64(actor.assets[good])
+	d := float64(actor.desiredAssets[good])
+	b := actor.basePersonalValues[good]
+
+	if d < 1 {
+		actor.adjustedPersonalValues[good] = 0
+	} else {
+		actor.adjustedPersonalValues[good] = b * (1 - x/d)
+	}
+
+	// actor.adjustedPersonalValues[good] = actor.basePersonalValues[good]
 }
 
 func (actor *Actor) sellGood(good Good, cost int) {

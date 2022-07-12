@@ -41,17 +41,15 @@ func graphWealth(screen *ebiten.Image) {
 func graphPersonalValues(good Good, screen *ebiten.Image) {
 	jump := 1
 
-	buckets := []map[int]int{make(map[int]int), make(map[int]int), make(map[int]int)}
+	buckets := []map[int]int{make(map[int]int), make(map[int]int)}
 
 	// lets add the 0 index for the graph
 	buckets[0][0] = 0
 	for a := range actors {
-		bucketIndex := int(a.basePersonalValues[good] / float64(jump))
+		bucketIndex := int(a.adjustedPersonalValues[good] / float64(jump))
 		buckets[0][bucketIndex]++
-		bucketIndex = int(a.adjustedPersonalValues[good] / float64(jump))
-		buckets[1][bucketIndex]++
 		bucketIndex = int(a.expectedValues[good] / float64(jump))
-		buckets[2][bucketIndex]++
+		buckets[1][bucketIndex]++
 	}
 
 	points := make([][]float64, 0)
@@ -62,7 +60,7 @@ func graphPersonalValues(good Good, screen *ebiten.Image) {
 		}
 	}
 
-	drawGraph(points, jump, 4, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("Personal and Expected Value of %s", good), screen)
+	drawGraph(points, jump, 6, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("%s:\n  Adjusted\n  Expected", good), screen)
 }
 
 func graphDesiredValues(good Good, screen *ebiten.Image) {
