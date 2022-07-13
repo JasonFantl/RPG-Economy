@@ -14,7 +14,7 @@ func DrawGraphs(screen *ebiten.Image) {
 	graphSupplyDemand(ROCKET, screen)
 	graphDesiredValues(ROCKET, screen)
 	graphWealth(screen)
-	drawPlot(2, 20, 400, 400, 15.0, 15.0, "corr", screen)
+	drawPlot(ROCKET, 2, 20, 400, 400, 15.0, 15.0, "corr", screen)
 }
 
 func graphWealth(screen *ebiten.Image) {
@@ -25,7 +25,7 @@ func graphWealth(screen *ebiten.Image) {
 	// lets add the 0 index for the graph
 	buckets[0] = 0
 	for a := range actors {
-		bucketIndex := a.assets[MONEY] / jump
+		bucketIndex := a.money / jump
 		buckets[bucketIndex]++
 	}
 
@@ -46,9 +46,9 @@ func graphPersonalValues(good Good, screen *ebiten.Image) {
 	// lets add the 0 index for the graph
 	buckets[0][0] = 0
 	for a := range actors {
-		bucketIndex := int(a.adjustedPersonalValues[good] / float64(jump))
+		bucketIndex := int(a.markets[good].adjustedPersonalValue / float64(jump))
 		buckets[0][bucketIndex]++
-		bucketIndex = int(a.expectedValues[good] / float64(jump))
+		bucketIndex = int(a.markets[good].expectedValue / float64(jump))
 		buckets[1][bucketIndex]++
 	}
 
@@ -73,9 +73,9 @@ func graphDesiredValues(good Good, screen *ebiten.Image) {
 	bucket2s[0] = 0
 
 	for a := range actors {
-		bucketIndex := int(float64(a.desiredAssets[good]) / float64(jump))
+		bucketIndex := int(float64(a.markets[good].desiredAssets) / float64(jump))
 		buckets[bucketIndex]++
-		bucket2Index := int(float64(a.assets[good]) / float64(jump))
+		bucket2Index := int(float64(a.markets[good].ownedAssets) / float64(jump))
 		bucket2s[bucket2Index]++
 	}
 
@@ -97,7 +97,7 @@ func graphSupplyDemand(good Good, screen *ebiten.Image) {
 	buckets := make(map[int]int)
 
 	for a := range actors {
-		bucketIndex := int(a.adjustedPersonalValues[good]) / jump
+		bucketIndex := int(a.markets[good].adjustedPersonalValue) / jump
 		buckets[bucketIndex]++
 	}
 
@@ -193,7 +193,7 @@ func drawGraph(points [][]float64, jumpXAxis, jumpYAxis int, drawXOff, drawYOff,
 
 }
 
-func drawPlot(jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom float64, title string, screen *ebiten.Image) {
+func drawPlot(goodX Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom float64, title string, screen *ebiten.Image) {
 	minX, maxX := 0, 0
 	minY, maxY := 0, 0
 
@@ -202,8 +202,8 @@ func drawPlot(jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom
 	drawYZoom /= float64(jumpYAxis)
 
 	for actor := range actors {
-		x := actor.assets[ROCKET]
-		y := actor.assets[MONEY]
+		x := actor.markets[goodX].ownedAssets
+		y := actor.money
 		if x < minX {
 			minX = x
 		}
@@ -219,8 +219,8 @@ func drawPlot(jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom
 	}
 
 	for actor := range actors {
-		x := actor.assets[ROCKET]
-		y := actor.assets[MONEY]
+		x := actor.markets[goodX].ownedAssets
+		y := actor.money
 
 		ebitenutil.DrawRect(screen, drawXOff+float64(x-minX)*drawXZoom, drawYOff+float64(-y+minY)*drawYZoom, 3, 3, color.White)
 	}

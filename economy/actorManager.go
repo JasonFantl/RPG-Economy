@@ -34,7 +34,7 @@ func Update() {
 
 func DoStuff(d float64) {
 	for actor := range actors {
-		actor.assets[ROCKET] += int(d)
+		actor.markets[ROCKET].ownedAssets += int(d)
 		// actor.personalValues[ROCKET] += d
 
 	}
