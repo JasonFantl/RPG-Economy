@@ -35,10 +35,11 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	gui.Display(screen)
-	economy.DrawGraphs(screen)
-	// gui.DisplaySprite(1, 1, 2, screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS()))
 
+	economy.DrawGraphs(economy.ROCKET, 100, 200, screen)
+	economy.DrawGraphs(economy.FOOD, 100, 500, screen)
+	economy.GraphWealth(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

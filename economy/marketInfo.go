@@ -88,9 +88,9 @@ func (actor *Actor) calcAdjustedValue(good Good) {
 		actor.markets[good].adjustedPersonalValue = 0
 	} else {
 		// linear
-		// actor.markets[good].adjustedPersonalValue = b * (1 - x/d)
+		actor.markets[good].adjustedPersonalValue = b * (1 - x/d)
 		// exponential
-		actor.markets[good].adjustedPersonalValue = b * (1 - x*x/(d*d))
+		// actor.markets[good].adjustedPersonalValue = b * (1 - x*x/(d*d))
 	}
 }
 

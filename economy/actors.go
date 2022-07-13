@@ -15,12 +15,20 @@ func NewActor() *Actor {
 	actor := &Actor{
 		money: 100,
 		markets: map[Good]*marketInfo{
-			ROCKET: &marketInfo{
+			ROCKET: {
 				basePersonalValue:       float64(d),
 				expectedValue:           0,
 				ownedAssets:             10,
 				desiredAssets:           d * 2,
 				failedTransactionThresh: 5,
+				priceSignalReactivity:   1.0,
+			},
+			FOOD: {
+				basePersonalValue:       rand.Float64()*5 + 10,
+				expectedValue:           0,
+				ownedAssets:             rand.Intn(5),
+				desiredAssets:           rand.Intn(5) + 2,
+				failedTransactionThresh: 4,
 				priceSignalReactivity:   1.0,
 			},
 		},
@@ -35,5 +43,6 @@ func (actor *Actor) Update() {
 	}
 
 	actor.runMarket(ROCKET)
+	actor.runMarket(FOOD)
 
 }

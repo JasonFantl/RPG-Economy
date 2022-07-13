@@ -9,15 +9,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-func DrawGraphs(screen *ebiten.Image) {
-	graphPersonalValues(ROCKET, screen)
-	graphSupplyDemand(ROCKET, screen)
-	graphDesiredValues(ROCKET, screen)
-	graphWealth(screen)
-	drawPlot(ROCKET, 2, 20, 400, 400, 15.0, 15.0, "corr", screen)
+func DrawGraphs(good Good, drawXOff, drawYOff float64, screen *ebiten.Image) {
+	graphPersonalAndExpectedValues(good, 1, 6, drawXOff, drawYOff, 15.0, 15.0, screen)
+	// graphSupplyDemand(good, screen)
+	graphDesiredAndActualValues(good, 1, 4, drawXOff+300.0, drawYOff, 15.0, 15.0, screen)
+	drawPlot(good, 2, 20, drawXOff+1000, drawYOff, 15.0, 15.0, "corr", screen)
 }
 
-func graphWealth(screen *ebiten.Image) {
+func GraphWealth(screen *ebiten.Image) {
 	jump := 20
 
 	buckets := make(map[int]int)
@@ -35,20 +34,19 @@ func graphWealth(screen *ebiten.Image) {
 		points = append(points, []float64{float64(k * jump), float64(v), 0})
 	}
 
-	drawGraph(points, jump, 4, 600.0, 200.0, 15.0, 15.0, "Wealth", screen)
+	drawGraph(points, jump, 4, 100.0, 800.0, 15.0, 15.0, "Wealth", screen)
 }
 
-func graphPersonalValues(good Good, screen *ebiten.Image) {
-	jump := 1
+func graphPersonalAndExpectedValues(good Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom float64, screen *ebiten.Image) {
 
 	buckets := []map[int]int{make(map[int]int), make(map[int]int)}
 
 	// lets add the 0 index for the graph
 	buckets[0][0] = 0
 	for a := range actors {
-		bucketIndex := int(a.markets[good].adjustedPersonalValue / float64(jump))
+		bucketIndex := int(a.markets[good].adjustedPersonalValue / float64(jumpXAxis))
 		buckets[0][bucketIndex]++
-		bucketIndex = int(a.markets[good].expectedValue / float64(jump))
+		bucketIndex = int(a.markets[good].expectedValue / float64(jumpXAxis))
 		buckets[1][bucketIndex]++
 	}
 
@@ -56,14 +54,14 @@ func graphPersonalValues(good Good, screen *ebiten.Image) {
 
 	for i, bucket := range buckets {
 		for k, v := range bucket {
-			points = append(points, []float64{float64(k * jump), float64(v), float64(i)})
+			points = append(points, []float64{float64(k * jumpXAxis), float64(v), float64(i)})
 		}
 	}
 
-	drawGraph(points, jump, 6, 100.0, 200.0, 15.0, 15.0, fmt.Sprintf("Adjusted and Expected for %s", good), screen)
+	drawGraph(points, jumpXAxis, jumpYAxis, drawXOff, drawYOff, drawXZoom, drawYZoom, fmt.Sprintf("Personal and Expected for %s", good), screen)
 }
 
-func graphDesiredValues(good Good, screen *ebiten.Image) {
+func graphDesiredAndActualValues(good Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom float64, screen *ebiten.Image) {
 	jump := 1
 
 	buckets := make(map[int]int)
@@ -88,7 +86,7 @@ func graphDesiredValues(good Good, screen *ebiten.Image) {
 		points = append(points, []float64{float64(k * jump), float64(v), 1})
 	}
 
-	drawGraph(points, jump, 4, 100.0, 600.0, 15.0, 15.0, fmt.Sprintf("Desired and Actual %s", good), screen)
+	drawGraph(points, jumpXAxis, jumpYAxis, drawXOff, drawYOff, drawXZoom, drawYZoom, fmt.Sprintf("Desired and Actual %s", good), screen)
 }
 
 func graphSupplyDemand(good Good, screen *ebiten.Image) {
