@@ -33,7 +33,7 @@ func NewActor() *Actor {
 		adjustedPersonalValues: make(map[Good]float64),
 		expectedValues: map[Good]float64{
 			FOOD:   0,
-			ROCKET: rand.Float64()*5 + 4,
+			ROCKET: 0,
 		},
 		assets: map[Good]int{
 			MONEY:  100,
@@ -55,6 +55,10 @@ func NewActor() *Actor {
 func (actor *Actor) Update() {
 	if rand.Float64() > 0.5 { // simulates time between activities
 		return
+	}
+
+	if rand.Float64() > 0.01 { // throw some randomness in (helps for non-sellers/buyers who need to interact with the market)
+		actor.expectedValues[ROCKET] += rand.Float64() - 0.5
 	}
 
 	// desired equation
@@ -100,7 +104,7 @@ func (actor *Actor) Update() {
 		actor.failedTransactionAttempts++
 	}
 
-	if actor.failedTransactionAttempts > actor.failedTransactionThresh { // haven't sold in a while, update expected values
+	if actor.failedTransactionAttempts > actor.failedTransactionThresh { // haven't transacted in a while, update expected values
 		actor.failedTransactionAttempts = 0
 		if actor.isBuyer(ROCKET) {
 			actor.expectedValues[ROCKET] += actor.priceSignalReactivity
@@ -110,6 +114,7 @@ func (actor *Actor) Update() {
 	}
 }
 
+// approximation, see README: APPROXIMATION 1
 func (actor *Actor) calcAdjustedValue(good Good) {
 	x := float64(actor.assets[good])
 	d := float64(actor.desiredAssets[good])
@@ -118,10 +123,11 @@ func (actor *Actor) calcAdjustedValue(good Good) {
 	if d < 1 {
 		actor.adjustedPersonalValues[good] = 0
 	} else {
-		actor.adjustedPersonalValues[good] = b * (1 - x/d)
+		// linear
+		// actor.adjustedPersonalValues[good] = b * (1 - x/d)
+		// exponential
+		actor.adjustedPersonalValues[good] = b * (1 - x*x/(d*d))
 	}
-
-	// actor.adjustedPersonalValues[good] = actor.basePersonalValues[good]
 }
 
 func (actor *Actor) sellGood(good Good, cost int) {
