@@ -8,6 +8,7 @@ import (
 type Actor struct {
 	money   int
 	markets map[Good]*marketInfo
+	skills  map[Job]int
 }
 
 func NewActor() *Actor {
@@ -26,11 +27,15 @@ func NewActor() *Actor {
 			FOOD: {
 				basePersonalValue:       rand.Float64()*5 + 10,
 				expectedValue:           0,
-				ownedAssets:             rand.Intn(5),
+				ownedAssets:             0,
 				desiredAssets:           rand.Intn(5) + 2,
 				failedTransactionThresh: 4,
 				priceSignalReactivity:   1.0,
 			},
+		},
+		skills: map[Job]int{
+			FARMER:     rand.Intn(10),
+			WOODWORKER: 10,
 		},
 	}
 
@@ -42,7 +47,12 @@ func (actor *Actor) Update() {
 		return
 	}
 
-	actor.runMarket(ROCKET)
+	if rand.Float64() < 0.1 && actor.markets[FOOD].ownedAssets > 0 { // eat food sometimes
+		actor.markets[FOOD].ownedAssets--
+	}
+
+	actor.runJob(FARMER)
+	// actor.runMarket(ROCKET)
 	actor.runMarket(FOOD)
 
 }

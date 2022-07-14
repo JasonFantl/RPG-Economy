@@ -1,6 +1,7 @@
 
 
-APPROXIMATION 1:
+
+### APPROXIMATION 1:
 The Output Value V. Input Good is not used directly, only its 
 derivative is used. This barely less accurate representation fails when two identical people try to tell if they should exchange a good. This model will say they value the good at the same price, but the buyer should consider how much value they would gain, and the seller should consider how much they would lose. Instead they both consider the derivative exactly at the point they are at, essentially assuming constant returns even when thats not the case.
 

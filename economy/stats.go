@@ -13,7 +13,7 @@ func DrawGraphs(good Good, drawXOff, drawYOff float64, screen *ebiten.Image) {
 	graphPersonalAndExpectedValues(good, 1, 6, drawXOff, drawYOff, 15.0, 15.0, screen)
 	// graphSupplyDemand(good, screen)
 	graphDesiredAndActualValues(good, 1, 4, drawXOff+300.0, drawYOff, 15.0, 15.0, screen)
-	drawPlot(good, 2, 20, drawXOff+1000, drawYOff, 15.0, 15.0, "corr", screen)
+	drawPlot(good, 1, 50, drawXOff+1000, drawYOff, 15.0, 15.0, "corr", screen)
 }
 
 func GraphWealth(screen *ebiten.Image) {
@@ -200,7 +200,8 @@ func drawPlot(goodX Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoo
 	drawYZoom /= float64(jumpYAxis)
 
 	for actor := range actors {
-		x := actor.markets[goodX].ownedAssets
+		x := actor.skills[goodToJob[goodX]]
+		// x := actor.markets[goodX].ownedAssets
 		y := actor.money
 		if x < minX {
 			minX = x
@@ -216,11 +217,21 @@ func drawPlot(goodX Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoo
 		}
 	}
 
+	averages := make(map[int]float64)
+	counts := make(map[int]int)
 	for actor := range actors {
-		x := actor.markets[goodX].ownedAssets
+		x := actor.skills[goodToJob[goodX]]
+		// x := actor.markets[goodX].ownedAssets
 		y := actor.money
 
+		averages[x] += float64(y)
+		counts[x]++
 		ebitenutil.DrawRect(screen, drawXOff+float64(x-minX)*drawXZoom, drawYOff+float64(-y+minY)*drawYZoom, 3, 3, color.White)
+	}
+
+	for x, y := range averages {
+		y /= float64(counts[x])
+		ebitenutil.DrawRect(screen, drawXOff+float64(x-minX)*drawXZoom, drawYOff+(-y+float64(minY))*drawYZoom, 5, 5, color.RGBA{250, 20, 20, 255})
 	}
 
 	// title

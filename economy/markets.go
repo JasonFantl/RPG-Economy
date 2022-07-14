@@ -10,9 +10,6 @@ type marketInfo struct {
 	adjustedPersonalValue float64 // changes based on if they have a good
 
 	expectedValue float64
-	// 0.0 -> don't update.
-	// 0.5 -> half of our expected value comes from the last signal.
-	// 1.0 -> last signal is the expected value.
 
 	ownedAssets   int
 	desiredAssets int
@@ -88,9 +85,12 @@ func (actor *Actor) calcAdjustedValue(good Good) {
 		actor.markets[good].adjustedPersonalValue = 0
 	} else {
 		// linear
-		actor.markets[good].adjustedPersonalValue = b * (1 - x/d)
+		// actor.markets[good].adjustedPersonalValue = b * (1 - x/d)
 		// exponential
 		// actor.markets[good].adjustedPersonalValue = b * (1 - x*x/(d*d))
+		// atan
+		actor.markets[good].adjustedPersonalValue = (b / 2) * (1 - 1.5*math.Atan(math.Pi*0.5*(x/d-0.5)))
+
 	}
 }
 

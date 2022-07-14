@@ -8,6 +8,7 @@ var actors map[*Actor]bool
 
 func Initialize() {
 	actors = make(map[*Actor]bool)
+
 	for i := 0; i < 100; i++ {
 		actors[NewActor()] = true
 	}
