@@ -1,6 +1,7 @@
 package economy
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 )
@@ -17,6 +18,17 @@ type marketInfo struct {
 	failedTransactionAttempts int // how many times we have to fail to buy/sell
 	failedTransactionThresh   int // how many times we have to fail to buy/sell before updating our expected value
 	priceSignalReactivity     float64
+}
+
+func newMarket(own int, desiredBottom, desiredTop int, personalValueBottom float64) *marketInfo {
+	return &marketInfo{
+		basePersonalValue:       rand.Float64()*personalValueBottom + personalValueBottom,
+		expectedValue:           0,
+		ownedAssets:             own,
+		desiredAssets:           rand.Intn(desiredTop-desiredBottom+1) + desiredBottom,
+		failedTransactionThresh: 4,
+		priceSignalReactivity:   1.0,
+	}
 }
 
 func (actor *Actor) runMarket(good Good) {
@@ -39,11 +51,21 @@ func (actor *Actor) runMarket(good Good) {
 				continue
 			}
 			sellingPrice = otherActor.willingSellPrice(good) // looking at the price tag
-			if willingBuyPrice < sellingPrice {              // price is too high
-				continue
-			}
-			if !actor.canBuy(sellingPrice) { // we don't have the money
-				continue
+
+			if sellingPrice >= 0 {
+				if willingBuyPrice < sellingPrice { // price is too high
+					continue
+				}
+				if !actor.canBuy(sellingPrice) { // buyer doesn't have the money
+					continue
+				}
+			} else { // negative sell price
+				if willingBuyPrice < sellingPrice { // price is too high
+					continue
+				}
+				if !otherActor.canBuy(-sellingPrice) { // seller doesn't have the money
+					continue
+				}
 			}
 
 			// made it past all the checks, this is someone we can buy from
@@ -53,8 +75,7 @@ func (actor *Actor) runMarket(good Good) {
 
 		if seller != nil { // found a seller we can buy from
 			// update expected values and asset count
-			actor.buyGood(good, sellingPrice)
-			seller.sellGood(good, sellingPrice)
+			transact(actor, seller, good, sellingPrice)
 		} else {
 			actor.markets[good].failedTransactionAttempts++
 		}
@@ -94,18 +115,23 @@ func (actor *Actor) calcAdjustedValue(good Good) {
 	}
 }
 
-func (actor *Actor) sellGood(good Good, cost int) {
-	actor.markets[good].ownedAssets--
-	actor.money += cost
-	actor.markets[good].expectedValue += actor.markets[good].priceSignalReactivity
-	actor.markets[good].failedTransactionAttempts = 0
-}
+func transact(buyer, seller *Actor, good Good, cost int) {
+	seller.markets[good].failedTransactionAttempts = 0
+	buyer.markets[good].failedTransactionAttempts = 0
 
-func (actor *Actor) buyGood(good Good, cost int) {
-	actor.markets[good].ownedAssets++
-	actor.money -= cost
-	actor.markets[good].expectedValue -= actor.markets[good].priceSignalReactivity
-	actor.markets[good].failedTransactionAttempts = 0
+	seller.markets[good].ownedAssets--
+	buyer.markets[good].ownedAssets++
+
+	seller.markets[good].expectedValue += seller.markets[good].priceSignalReactivity
+	buyer.markets[good].expectedValue -= buyer.markets[good].priceSignalReactivity
+
+	seller.money += cost
+	buyer.money -= cost
+
+	if buyer.money < 0 || seller.money < 0 {
+		fmt.Printf("buyer money: %d, good: %s, cost: %d\n", buyer.money, good, cost)
+		fmt.Printf("seller money: %d, good: %s, cost: %d\n", seller.money, good, cost)
+	}
 }
 
 func (actor *Actor) willingBuyPrice(good Good) int {

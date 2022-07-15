@@ -1,9 +1,5 @@
 package economy
 
-import (
-	"fmt"
-)
-
 var actors map[*Actor]bool
 
 func Initialize() {
@@ -20,13 +16,13 @@ func Update() {
 	buyers := make(map[*Actor]bool)
 
 	for actor := range actors {
-		if actor.isBuyer(ROCKET) && actor.canBuy(1) {
+		if actor.isBuyer(HOUSE) && actor.canBuy(1) {
 			buyers[actor] = true
-		} else if actor.isSeller(ROCKET) && actor.canSell(ROCKET) {
+		} else if actor.isSeller(HOUSE) && actor.canSell(HOUSE) {
 			sellers[actor] = true
 		}
 	}
-	fmt.Printf("BUYERS: %d, SELLERS: %d, NON: %d\n", len(buyers), len(sellers), len(actors)-(len(buyers)+len(sellers)))
+	// fmt.Printf("BUYERS: %d, SELLERS: %d, NON: %d\n", len(buyers), len(sellers), len(actors)-(len(buyers)+len(sellers)))
 
 	for actor := range actors {
 		actor.Update()
@@ -35,8 +31,6 @@ func Update() {
 
 func DoStuff(d float64) {
 	for actor := range actors {
-		actor.markets[ROCKET].ownedAssets += int(d)
-		// actor.personalValues[ROCKET] += d
-
+		actor.markets[HOUSE].ownedAssets += int(d)
 	}
 }

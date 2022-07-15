@@ -12,30 +12,17 @@ type Actor struct {
 }
 
 func NewActor() *Actor {
-	d := rand.Intn(10) + 10
 	actor := &Actor{
 		money: 100,
 		markets: map[Good]*marketInfo{
-			ROCKET: {
-				basePersonalValue:       float64(d),
-				expectedValue:           0,
-				ownedAssets:             10,
-				desiredAssets:           d * 2,
-				failedTransactionThresh: 5,
-				priceSignalReactivity:   1.0,
-			},
-			FOOD: {
-				basePersonalValue:       rand.Float64()*5 + 10,
-				expectedValue:           0,
-				ownedAssets:             0,
-				desiredAssets:           rand.Intn(5) + 2,
-				failedTransactionThresh: 4,
-				priceSignalReactivity:   1.0,
-			},
+			FOOD:  newMarket(0, 3, 6, 15.0),
+			WOOD:  newMarket(3, 2, 10, 10.0),
+			HOUSE: newMarket(0, 1, 2, 15.0),
 		},
 		skills: map[Job]int{
 			FARMER:     rand.Intn(10),
 			WOODWORKER: 10,
+			BUILDER:    rand.Intn(10) / 9,
 		},
 	}
 
@@ -50,9 +37,15 @@ func (actor *Actor) Update() {
 	if rand.Float64() < 0.1 && actor.markets[FOOD].ownedAssets > 0 { // eat food sometimes
 		actor.markets[FOOD].ownedAssets--
 	}
+	if rand.Float64() < 0.01 && actor.markets[HOUSE].ownedAssets > 0 { // house burns down
+		actor.markets[HOUSE].ownedAssets--
+	}
 
 	actor.runJob(FARMER)
-	// actor.runMarket(ROCKET)
+	actor.runJob(BUILDER)
+
 	actor.runMarket(FOOD)
+	actor.runMarket(WOOD)
+	actor.runMarket(HOUSE)
 
 }

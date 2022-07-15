@@ -7,15 +7,18 @@ type Job string
 const (
 	WOODWORKER = "Woodworker"
 	FARMER     = "Farmer"
+	BUILDER    = "Builder"
 )
 
 var jobToGood = map[Job]Good{
 	WOODWORKER: WOOD,
 	FARMER:     FOOD,
+	BUILDER:    HOUSE,
 }
 var goodToJob = map[Good]Job{
-	WOOD: WOODWORKER,
-	FOOD: FARMER,
+	WOOD:  WOODWORKER,
+	FOOD:  FARMER,
+	HOUSE: BUILDER,
 }
 
 func (actor *Actor) runJob(job Job) {

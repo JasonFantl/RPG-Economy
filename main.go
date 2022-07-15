@@ -37,9 +37,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	gui.Display(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS()))
 
-	economy.DrawGraphs(economy.ROCKET, 100, 200, screen)
+	economy.DrawGraphs(economy.HOUSE, 100, 200, screen)
 	economy.DrawGraphs(economy.FOOD, 100, 500, screen)
-	economy.GraphWealth(screen)
+	economy.DrawGraphs(economy.WOOD, 100, 800, screen)
+
+	economy.GraphWealth(100, 900, screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

@@ -3,10 +3,10 @@ package economy
 type Good string
 
 const (
-	MONEY  = "Money"
-	FOOD   = "Food"
-	WOOD   = "Wood"
-	ROCKET = "Rocket"
+	MONEY = "Money"
+	FOOD  = "Food"
+	WOOD  = "Wood"
+	HOUSE = "House"
 )
 
-var goods = []Good{MONEY, FOOD, WOOD, ROCKET}
+var goods = []Good{MONEY, FOOD, WOOD, HOUSE}

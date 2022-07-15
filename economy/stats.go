@@ -13,10 +13,10 @@ func DrawGraphs(good Good, drawXOff, drawYOff float64, screen *ebiten.Image) {
 	graphPersonalAndExpectedValues(good, 1, 6, drawXOff, drawYOff, 15.0, 15.0, screen)
 	// graphSupplyDemand(good, screen)
 	graphDesiredAndActualValues(good, 1, 4, drawXOff+300.0, drawYOff, 15.0, 15.0, screen)
-	drawPlot(good, 1, 50, drawXOff+1000, drawYOff, 15.0, 15.0, "corr", screen)
+	drawPlot(good, 1, 1, drawXOff+600, drawYOff, 15.0, 15.0, "corr", screen)
 }
 
-func GraphWealth(screen *ebiten.Image) {
+func GraphWealth(drawXOff, drawYOff float64, screen *ebiten.Image) {
 	jump := 20
 
 	buckets := make(map[int]int)
@@ -34,7 +34,7 @@ func GraphWealth(screen *ebiten.Image) {
 		points = append(points, []float64{float64(k * jump), float64(v), 0})
 	}
 
-	drawGraph(points, jump, 4, 100.0, 800.0, 15.0, 15.0, "Wealth", screen)
+	drawGraph(points, jump, 4, drawXOff, drawYOff, 15.0, 15.0, "Wealth", screen)
 }
 
 func graphPersonalAndExpectedValues(good Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom float64, screen *ebiten.Image) {
@@ -191,7 +191,7 @@ func drawGraph(points [][]float64, jumpXAxis, jumpYAxis int, drawXOff, drawYOff,
 
 }
 
-func drawPlot(goodX Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom float64, title string, screen *ebiten.Image) {
+func drawPlot(good Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoom, drawYZoom float64, title string, screen *ebiten.Image) {
 	minX, maxX := 0, 0
 	minY, maxY := 0, 0
 
@@ -200,9 +200,12 @@ func drawPlot(goodX Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoo
 	drawYZoom /= float64(jumpYAxis)
 
 	for actor := range actors {
-		x := actor.skills[goodToJob[goodX]]
-		// x := actor.markets[goodX].ownedAssets
-		y := actor.money
+		// x := actor.skills[goodToJob[goodX]]
+		// // x := actor.markets[goodX].ownedAssets
+		// y := actor.money
+		x := actor.markets[good].desiredAssets
+		y := actor.markets[good].ownedAssets
+
 		if x < minX {
 			minX = x
 		}
@@ -220,9 +223,12 @@ func drawPlot(goodX Good, jumpXAxis, jumpYAxis int, drawXOff, drawYOff, drawXZoo
 	averages := make(map[int]float64)
 	counts := make(map[int]int)
 	for actor := range actors {
-		x := actor.skills[goodToJob[goodX]]
-		// x := actor.markets[goodX].ownedAssets
-		y := actor.money
+		// x := actor.skills[goodToJob[goodX]]
+		// // x := actor.markets[goodX].ownedAssets
+		// y := actor.money
+
+		x := actor.markets[good].desiredAssets
+		y := actor.markets[good].ownedAssets
 
 		averages[x] += float64(y)
 		counts[x]++
